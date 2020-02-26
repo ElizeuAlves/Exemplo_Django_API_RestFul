@@ -1,0 +1,171 @@
+Primeiro, é necessário instalar o django:
+
+=============================================================
+
+    pip install django
+
+=============================================================
+
+- Outros pacotes necessários para utilizar o django rest são:
+
+=============================================================
+
+    pip install djangorestframework
+    pip install markdown       # Markdown support for the browsable API.
+    pip install django-filter  # Filtering support
+
+=============================================================
+
+- Após todas as instalações, é necessário iniciar um projeto:
+
+=============================================================
+
+    django-admin startproject api
+
+=============================================================
+
+- Com a criação do projeto, cria-se ao menos um app:
+
+=============================================================
+
+    django-admin startapp core
+
+=============================================================
+
+- Depois, é necessário realizar as migrações do banco de dados, e criar um super usuário:
+
+=============================================================
+
+    python manage.py migrate
+
+    python manage.py createsuperuser
+
+=============================================================
+
+- Também é necessário registrar o django rest framework e o app no arquivo settings.py do
+projeto principal. Ex:
+
+=============================================================
+
+    # Application definition
+
+    INSTALLED_APPS = [
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'core',   --> Registrando o app
+        'rest_framework'   --> Registrando o django rest framework
+    ]
+
+=============================================================
+
+- Além do arquivo settings.py, é preciso registrar o django rest framework no arquivo
+urls.py do projeto principal. Ex:
+
+=============================================================
+
+    urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('api-auth/', include('rest_framework.urls'))
+    ]
+
+=============================================================
+
+- Com todos os registros realizados, é possível começar a definir um model no arquio models.py
+do seu app. Ex:
+
+=============================================================
+
+    from django.db import models
+
+    # Create your models here.
+
+    class Cliente(models.Model):
+        nome = models.CharField(max_length=50)
+        endereco = models.CharField(max_length=50)
+        idade = models.IntegerField()
+
+        def __str__(self):
+            return self.nome
+
+=============================================================
+
+- Com as alterações realizadas no arquivo models.py, é necessário rodar os comandos makemigrations
+e migrate:
+
+=============================================================
+
+    python manage.py makemigrations
+    python manage.py migrate
+
+=============================================================
+
+- O model também pode ser registrado no arquivo admin.py do seu app. Ex:
+
+=============================================================
+
+    from django.contrib import admin
+    from .models import Cliente
+
+    # Register your models here.
+
+    admin.site.register(Cliente)
+
+=============================================================
+
+- Para exibir os registros do BD em formato JSON, cria-se um arquivo chamado serializers.py
+dentro do seu app. O arquivo ficará da seguinte forma:
+
+=============================================================
+
+    from rest_framework import serializers
+    from .models import Cliente
+
+    # Serializers define the API representation.
+    class UserSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Cliente  --> Model que será serializado
+            fields = ['id', 'nome', 'endereco', 'idade'] --> Campos do model que serão exibidos
+
+=============================================================
+
+- Com o arquivo serializers.py pronto, é necessário definir o viewset. Para isso, é editado o arquivo
+views.py do app. Ex:
+
+=============================================================
+
+    from django.shortcuts import render
+    from rest_framework import viewsets
+    from .models import Cliente  --> Importando o model criado
+    from .serializers import ClienteSerializer  --> Importando o serializer criado
+
+    # Create your views here.
+
+    class ClienteViewSet(viewsets.ModelViewSet):
+        queryset = Cliente.objects.all()  --> Pegando todos campos do BD do model Cliente
+        serializer_class = ClienteSerializer
+
+=============================================================
+
+Com o arquivo views.py editado, é necessário definir uma rota no arquivo urls.py do projeto. Ex:
+
+=============================================================
+
+    from django.contrib import admin
+    from django.urls import path, include
+    from core.views import ClienteViewSet  --> Importando o ClienteViewSet criado no arquivo views.py do app
+    from rest_framework import routers
+
+    router = routers.DefaultRouter()
+    router.register('clientes', ClienteViewSet)  --> Registrando a rota ClienteViewSet
+
+    urlpatterns = [
+        path('', include(router.urls)),  --> Registrando a rota nas urls
+        path('admin/', admin.site.urls),
+        path('api-auth/', include('rest_framework.urls'))
+    ]
+
+=============================================================
