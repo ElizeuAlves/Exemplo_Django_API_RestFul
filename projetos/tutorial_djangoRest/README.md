@@ -1,0 +1,1 @@
+- Projeto criado durante o tutorial do Django Rest Framework.
