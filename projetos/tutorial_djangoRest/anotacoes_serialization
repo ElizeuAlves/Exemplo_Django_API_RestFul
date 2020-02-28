@@ -113,3 +113,88 @@ de linhas de código, podemos reescrever esta classe, utilizando a classe ModelS
             fields = ['id', 'title', 'code', 'linenos', 'language', 'style']
 
 ====================================================================================
+
+- Com o serializer definido, é possível criar as views utilizando a nova classe
+serializer que foi criada. Primeiro, definimos uma view para métodos GET e POST:
+
+    @csrf_exempt
+    def snippet_list(request):
+
+        if request.method == 'GET':
+            snippets = Snippet.objects.all()
+            serializer = SnippetSerializer(snippets, many=True)
+            return JsonResponse(serializer.data, safe=False)
+
+
+        if request.method == 'POST':
+            data = JSONParser().parse(request)
+            serializer = SnippetSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return JsonResponse(serializer.data, status=201)
+            return JsonResponse(serializer.errors, status=400)
+
+====================================================================================
+
+- No código acima definimos dois métodos, porém, nenhum deles manipula um snippet de forma individual. Para isso, criamos mais uma view que irá realizar esta função:
+
+    def snippet_detail(request, pk):
+        try:
+            snippet = Snippet.objects.get(pk=pk)
+        except Snippet.DoesNotExist:
+            return HttpResponse(status=404)
+
+
+        if request.method == 'GET':
+            serializer = SnippetSerializer(snippet)
+            return JsonResponse(serializer.data)
+        
+        elif request.method == 'POST':
+            data = JSONParser().parse(request)
+            serializer =SnippetSerializer(snippet, data=data)
+
+            if serializer.is_valid():
+                serializer.save()
+                return JsonResponse(serializer.data)
+
+            return JsonResponse(serializer.errors, status=400)
+        
+        elif request.method == 'DELETE':
+            snippet.delete()
+            return HttpResponse(status=204)
+
+====================================================================================
+
+- Com as views criadas, precisamos criar um arquivo urls.py no app, para criarmos
+uma ligação entre a URL e a view:
+
+    from django.urls import path
+    from snippets import views
+
+    urlpatterns = [
+        path('snippets/', views.snippet_list),
+        path('snippets/<int:pk>/', views.snippet_detail),
+    ]
+
+====================================================================================
+
+- Também precisamos configurar o arquivo urls.py do projeto, para incluirmos a URL
+do app snippet:
+
+    from django.conf.urls import url
+    from django.contrib import admin
+    from django.urls import path, include
+
+    urlpatterns = [
+        path('', include('snippets.urls')),
+        url(r'^admin/', admin.site.urls),
+    ]
+
+====================================================================================
+
+- Com todas as configurações realizadas, podemos testar a API usando ferramentas como
+CURL ou HTTPIE. Ex:
+
+http http://127.0.0.1:8000/snippets/  --> GET com HTTPIE
+
+curl http://127.0.0.1:8000/snippets/  --> GET com CURL
