@@ -1,3 +1,6 @@
+Tutorial usado como base para este projeto: https://www.django-rest-framework.org/tutorial/1-serialization/
+
+
 - Pacotes necessários para a realização deste tutorial:
 
     pip install django
