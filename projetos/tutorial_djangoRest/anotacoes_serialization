@@ -66,3 +66,50 @@ as migrações:
     python manage.py migrate
 
 ====================================================================================
+
+- O arquivo serializers.py é criado para conseguirmos apresentar os dados do BD em
+formato JSON. Este arquivo é criado dentro do app, e ficará da seguinte forma:
+
+    from rest_framework import serializers
+    from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
+
+
+    class SnippetSerializer(serializers.Serializer):
+
+        # Definindo quais campos serão serializados
+        id = serializers.IntegerField(read_only=True)
+        title = serializers.CharField(required=False, allow_blank=True, max_length=100)
+        code = serializers.CharField(style={'base_template': 'textarea.html'})
+        linenos = serializers.BooleanField(required=False)
+        language = serializers.ChoiceField(choices=LANGUAGE_CHOICES, default='python')
+        style = serializers.ChoiceField(choices=STYLE_CHOICES, default='friendly')
+
+
+        # Cria e retorna uma nova instância de Snippet
+        def create(self, valited_data):
+            return Snippet.objects.create(**valited_data)
+    
+        
+        # Atualiza uma instância já existente            
+        def update(self, instance, valited_data):
+            instance.title = valited_data.get('title', instance.title)
+            instance.code = validated_data.get('code', instance.code)
+            instance.linenos = validated_data.get('linenos', instance.linenos)
+            instance.language = validated_data.get('language', instance.language)
+            instance.style = validated_data.get('style', instance.style)
+            instance.save()
+            return instance
+
+====================================================================================
+
+- Como é possível ver no código da classe SnippetSerializer, muitas informações que
+já estão na Model Snippet estão sendo replicadas na classe. Para diminuirmos o número
+de linhas de código, podemos reescrever esta classe, utilizando a classe ModelSerializer;
+
+    class SnippetSerializer(serializers.ModelSerializer):
+        
+        class Meta:
+            model = Snippet
+            fields = ['id', 'title', 'code', 'linenos', 'language', 'style']
+
+====================================================================================
