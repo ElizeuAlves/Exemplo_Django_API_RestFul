@@ -1,0 +1,34 @@
+Tutorial base: https://www.django-rest-framework.org/tutorial/3-class-based-views/
+
+====================================================================
+
+- Utilizando class-based views no lugar das function based views, iremos obter um código muito parecido:
+
+	class SnippetList(APIView):
+	    """
+	    List all snippets, or create a new snippet.
+	    """
+	    def get(self, request, format=None):
+	        snippets = Snippet.objects.all()
+	        serializer = SnippetSerializer(snippets, many=True)
+	        return Response(serializer.data)
+
+	    def post(self, request, format=None):
+	        serializer = SnippetSerializer(data=request.data)
+	        if serializer.is_valid():
+	            serializer.save()
+	            return Response(serializer.data, status=status.HTTP_201_CREATED)
+	        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+====================================================================
+
+- Podemos notar que agora os métodos HTTP estão separados de uma forma melhor;
+
+- Também é necessário realizar alguns ajustes no arquivo urls.py do app:
+
+	urlpatterns = [
+	    path('snippets/', views.SnippetList.as_view()),
+	    path('snippets/<int:pk>/', views.SnippetDetail.as_view()),
+	]
+
+====================================================================
