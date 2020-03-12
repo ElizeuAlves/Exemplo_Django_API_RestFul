@@ -1,0 +1,37 @@
+Tutorial base:
+https://www.django-rest-framework.org/tutorial/2-requests-and-responses/
+
+====================================================================
+
+- O Rest framework introduziu o objeto Request, que é uma extensão do HTTPRequest. Além do Request, o Rest framework também introduziu o objeto Response, que trabalha com negociações para retornar o tipo de conteúdo correto para o cliente;
+
+====================================================================
+
+- Com o Rest framework é possível utilizar:
+
+	- Decorador @api_view para trabalhar com function based views;
+	- Classe APIView para trabalhar com class-based views;
+
+- Utilizamos o decorador @api_view da seguinte forma:
+
+
+	@api_view(['GET', 'POST'])
+	def snippet_list(request):
+	    
+	    #Lista todos os snippets, ou cria um novo snippet
+
+	    if request.method == 'GET':
+	        snippets = Snippet.objects.all()
+	        serializer = SnippetSerializer(snippets, many=True)
+	        return Response(serializer.data)
+
+	    elif request.method == 'POST':
+	        serializer = SnippetSerializer(data=request.data)
+	        if serializer.is_valid():
+	            serializer.save()
+	            return Response(serializer.data, status=status.HTTP_201_CREATED)
+	        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+====================================================================
+
+- No código acima podemos verificar que, utilizando o Request, não é necessário fazer a conversão dos dados que chegam em formato json.
